@@ -20,6 +20,7 @@ import { getMetrics, computeDerivedStats, recordManualApproval, recordManualRemo
 import { recordApproval, recordViolation } from '../services/reputation.service.js';
 import { loadSettings } from '../services/settings.service.js';
 import { loadCustomRules, saveCustomRules } from '../services/rules.service.js';
+import { recordAuditEntry, buildAuditEntry, getAuditLog } from '../services/audit.service.js';
 import { Keys, MAX_OVERRIDE_LOG } from '../constants.js';
 
 
@@ -93,6 +94,9 @@ async function loadDashboardData(context: Context): Promise<InitDataPayload> {
     // Not critical
   }
 
+  // Load audit log
+  const auditLog = await getAuditLog(context.redis, subredditId, 50);
+
   return {
     queueItems,
     metrics,
@@ -107,6 +111,7 @@ async function loadDashboardData(context: Context): Promise<InitDataPayload> {
     customRules,
     isModerator,
     currentUsername: username,
+    auditLog,
   };
 }
 
@@ -147,6 +152,15 @@ async function handleAction(
           await recordModOverride(context.redis, subredditId, originalItem, 'mod_approved', modUsername);
         }
 
+        // Audit log
+        if (originalItem) {
+          await recordAuditEntry(context.redis, subredditId, buildAuditEntry(
+            'manual_approve', itemId, originalItem.type, originalItem.body,
+            originalItem.authorName, originalItem.category, originalItem.confidence,
+            `moderator:${modUsername}`, 'Manually approved by moderator',
+          ));
+        }
+
         return { success: true, message: '✅ Content approved — trust score improved' };
       }
 
@@ -161,6 +175,15 @@ async function handleAction(
         // Record mod override for adaptive learning
         if (originalItem && originalItem.suggestedAction !== 'remove') {
           await recordModOverride(context.redis, subredditId, originalItem, 'mod_removed', modUsername);
+        }
+
+        // Audit log
+        if (originalItem) {
+          await recordAuditEntry(context.redis, subredditId, buildAuditEntry(
+            'manual_remove', itemId, originalItem.type, originalItem.body,
+            originalItem.authorName, originalItem.category, originalItem.confidence,
+            `moderator:${modUsername}`, 'Manually removed by moderator',
+          ));
         }
 
         return { success: true, message: '🗑️ Content removed — trust score decreased' };
@@ -184,6 +207,11 @@ async function handleAction(
         // Record override
         if (originalItem) {
           await recordModOverride(context.redis, subredditId, originalItem, 'mod_banned', modUsername);
+          await recordAuditEntry(context.redis, subredditId, buildAuditEntry(
+            'manual_ban', itemId, originalItem.type, originalItem.body,
+            originalItem.authorName, originalItem.category, originalItem.confidence,
+            `moderator:${modUsername}`, 'User banned (30d) and content removed',
+          ));
         }
 
         return { success: true, message: '🔨 User banned (30d) & content removed' };
@@ -191,6 +219,13 @@ async function handleAction(
 
       case 'ignore': {
         await resolveQueueItem(context.redis, subredditId, itemId, 'ignored', modUsername);
+        if (originalItem) {
+          await recordAuditEntry(context.redis, subredditId, buildAuditEntry(
+            'manual_ignore', itemId, originalItem.type, originalItem.body,
+            originalItem.authorName, originalItem.category, originalItem.confidence,
+            `moderator:${modUsername}`, 'Dismissed from queue',
+          ));
+        }
         return { success: true, message: '👁️ Dismissed from queue' };
       }
 
@@ -239,6 +274,13 @@ async function handleBatchAction(
           if (originalItem && originalItem.suggestedAction !== 'approve') {
             await recordModOverride(context.redis, subredditId, originalItem, 'mod_approved', modUsername);
           }
+          if (originalItem) {
+            await recordAuditEntry(context.redis, subredditId, buildAuditEntry(
+              'batch', itemId, originalItem.type, originalItem.body,
+              originalItem.authorName, originalItem.category, originalItem.confidence,
+              `moderator:${modUsername}`, `Batch approved`,
+            ));
+          }
           break;
         }
         case 'remove': {
@@ -251,10 +293,24 @@ async function handleBatchAction(
           if (originalItem && originalItem.suggestedAction !== 'remove') {
             await recordModOverride(context.redis, subredditId, originalItem, 'mod_removed', modUsername);
           }
+          if (originalItem) {
+            await recordAuditEntry(context.redis, subredditId, buildAuditEntry(
+              'batch', itemId, originalItem.type, originalItem.body,
+              originalItem.authorName, originalItem.category, originalItem.confidence,
+              `moderator:${modUsername}`, `Batch removed`,
+            ));
+          }
           break;
         }
         case 'ignore': {
           await resolveQueueItem(context.redis, subredditId, itemId, 'ignored', modUsername, 'Batch dismissed');
+          if (originalItem) {
+            await recordAuditEntry(context.redis, subredditId, buildAuditEntry(
+              'batch', itemId, originalItem.type, originalItem.body,
+              originalItem.authorName, originalItem.category, originalItem.confidence,
+              `moderator:${modUsername}`, `Batch dismissed`,
+            ));
+          }
           break;
         }
         case 'ban': {
@@ -273,6 +329,11 @@ async function handleBatchAction(
           await recordManualRemoval(context.redis, subredditId);
           if (originalItem) {
             await recordModOverride(context.redis, subredditId, originalItem, 'mod_banned', modUsername);
+            await recordAuditEntry(context.redis, subredditId, buildAuditEntry(
+              'batch', itemId, originalItem.type, originalItem.body,
+              originalItem.authorName, originalItem.category, originalItem.confidence,
+              `moderator:${modUsername}`, `Batch banned (30d)`,
+            ));
           }
           break;
         }
@@ -348,6 +409,31 @@ export const SentinelDashboardPost = Devvit.addCustomPostType({
             JSON.parse(JSON.stringify({
               type: 'INIT_DATA',
               payload: { actionResult: { success: false, message: '❌ Failed to save rules' } },
+            })),
+          );
+        }
+      }
+
+      if (message.type === 'AUDIT_RESTORE') {
+        const payload = message.payload as { contentId: string };
+        try {
+          const subreddit = await context.reddit.getCurrentSubreddit();
+          const currentUser = await context.reddit.getCurrentUser();
+          const modUsername = currentUser?.username ?? 'moderator';
+          await context.reddit.approve(payload.contentId);
+
+          await recordAuditEntry(context.redis, subreddit.id, buildAuditEntry(
+            'restore', payload.contentId, 'post', '',
+            '', 'restored', 0,
+            `moderator:${modUsername}`, 'Content restored from audit log',
+          ));
+
+          await refreshAndSend({ actionResult: { success: true, message: '✅ Content restored successfully' } });
+        } catch {
+          context.ui.webView.postMessage('sentinel-dashboard',
+            JSON.parse(JSON.stringify({
+              type: 'INIT_DATA',
+              payload: { actionResult: { success: false, message: '❌ Failed to restore content' } },
             })),
           );
         }

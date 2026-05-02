@@ -217,7 +217,7 @@ export async function enqueueItem(
     if (oldest && oldest.length > 0) {
       for (const member of oldest) {
         const memberId = typeof member === 'string' ? member : (member as { member: string }).member;
-        await redis.zRem(Keys.queue(subredditId), memberId);
+        await redis.zRem(Keys.queue(subredditId), [memberId]);
       }
     }
   }
@@ -255,7 +255,7 @@ export async function getQueueItems(
 
     // Expire stale items silently
     if (item.createdAt < cutoffMs && item.status === 'pending') {
-      await redis.zRem(Keys.queue(subredditId), memberId);
+      await redis.zRem(Keys.queue(subredditId), [memberId]);
       continue;
     }
 
@@ -289,7 +289,7 @@ export async function resolveQueueItem(
   await redis.hSet(Keys.item(itemId), serializeItem(item));
 
   // Remove from active queue (resolved items stay in hash for history)
-  await redis.zRem(Keys.queue(subredditId), itemId);
+  await redis.zRem(Keys.queue(subredditId), [itemId]);
 
   return item;
 }

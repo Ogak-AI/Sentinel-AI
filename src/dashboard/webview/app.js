@@ -22,6 +22,7 @@ let state = {
   loading: true,
   actionResult: null,
   batchSelected: new Set(),  // Set of selected itemIds for batch moderation
+  auditLog: [],              // AuditEntry[] from server
 };
 
 // ──────────────────────────────────────────────────────────
@@ -50,6 +51,7 @@ window.addEventListener('message', (event) => {
       loading: false,
       actionResult: payload.actionResult || null,
       batchSelected: new Set(), // clear selection on refresh
+      auditLog: payload.auditLog || [],
     };
     renderAll();
     updateBatchBar();
@@ -113,6 +115,7 @@ function renderAll() {
   renderMetrics();
   renderSettings();
   renderRules();
+  renderAuditLog();
   updateStatusBadge();
 }
 
@@ -300,10 +303,48 @@ function dispatchBatchAction(action) {
   const ids = Array.from(state.batchSelected);
   if (ids.length === 0) return;
 
-  postToDevvit({
-    type: 'BATCH_ACTION',
-    payload: { itemIds: ids, action },
+  // Build preview of affected items
+  const affectedItems = state.queueItems.filter(i => ids.includes(i.id));
+  const previewItems = affectedItems.slice(0, 5);
+  const remaining = affectedItems.length - previewItems.length;
+
+  const actionLabel = action === 'approve' ? 'approve' : action === 'remove' ? 'remove' : action === 'ignore' ? 'dismiss' : action;
+
+  // Populate confirmation modal
+  const confirmMessage = document.getElementById('confirmMessage');
+  confirmMessage.innerHTML = `You are about to <strong>${escHtml(actionLabel)}</strong> <strong>${ids.length}</strong> item${ids.length !== 1 ? 's' : ''}. This cannot be undone.`;
+
+  const confirmList = document.getElementById('confirmItemList');
+  confirmList.innerHTML = '';
+  previewItems.forEach((item, idx) => {
+    const row = document.createElement('div');
+    row.className = 'confirm-item-row';
+    row.innerHTML = `
+      <span class="confirm-item-idx">${idx + 1}.</span>
+      <span class="confirm-item-title">${item.type === 'post' ? '📄' : '💬'} ${escHtml(item.title || item.body.slice(0, 80))}</span>
+    `;
+    confirmList.appendChild(row);
   });
+  if (remaining > 0) {
+    const moreEl = document.createElement('div');
+    moreEl.className = 'confirm-more-text';
+    moreEl.textContent = `…and ${remaining} more item${remaining !== 1 ? 's' : ''}`;
+    confirmList.appendChild(moreEl);
+  }
+
+  // Set up confirm button
+  const proceedBtn = document.getElementById('confirmProceed');
+  proceedBtn.textContent = `⚡ ${actionLabel.charAt(0).toUpperCase() + actionLabel.slice(1)} ${ids.length} items`;
+  proceedBtn.onclick = () => {
+    postToDevvit({
+      type: 'BATCH_ACTION',
+      payload: { itemIds: ids, action },
+    });
+    closeConfirmModal();
+  };
+
+  // Show confirmation modal
+  document.getElementById('confirmBackdrop').classList.add('open');
 }
 
 // ──────────────────────────────────────────────
@@ -708,5 +749,78 @@ function setText(id, text) {
     document.getElementById('newRuleKeywords').value = '';
     document.getElementById('newRuleReason').value = '';
     showToast('✅ Rule added — saving…');
+  });
+})();
+
+
+// ──────────────────────────────────────────────────────────
+// Audit Log
+// ──────────────────────────────────────────────────────────
+function renderAuditLog() {
+  const tbody = document.getElementById('auditBody');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+
+  const entries = state.auditLog || [];
+
+  if (entries.length === 0) {
+    tbody.innerHTML = '<tr class="audit-empty"><td colspan="7">No audit entries yet. Actions will appear here automatically.</td></tr>';
+    return;
+  }
+
+  entries.forEach(entry => {
+    const tr = document.createElement('tr');
+
+    const actionLabels = {
+      auto_remove: '🤖 Auto Remove',
+      auto_approve: '🤖 Auto Approve',
+      manual_remove: '🗑️ Removed',
+      manual_approve: '✅ Approved',
+      manual_ban: '🔨 Banned',
+      manual_ignore: '👁️ Dismissed',
+      batch: '⚡ Batch',
+      restore: '♻️ Restored',
+    };
+
+    const showRestore = (entry.actionType === 'auto_remove' || entry.actionType === 'manual_remove');
+
+    tr.innerHTML = `
+      <td>${formatTimeAgo(entry.timestamp)}</td>
+      <td><span class="audit-action-badge ${entry.actionType}">${actionLabels[entry.actionType] || entry.actionType}</span></td>
+      <td title="${escHtml(entry.contentSnippet)}">${escHtml(entry.contentSnippet || '—')}</td>
+      <td>u/${escHtml(entry.authorName || '—')}</td>
+      <td class="audit-triggered-by">${escHtml(entry.triggeredBy)}</td>
+      <td>${entry.aiConfidence}%</td>
+      <td>${showRestore ? `<button class="audit-restore-btn" data-content-id="${entry.contentId}">♻️ Restore</button>` : ''}</td>
+    `;
+
+    // Wire restore button
+    const restoreBtn = tr.querySelector('.audit-restore-btn');
+    if (restoreBtn) {
+      restoreBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const contentId = restoreBtn.dataset.contentId;
+        postToDevvit({ type: 'AUDIT_RESTORE', payload: { contentId } });
+        restoreBtn.disabled = true;
+        restoreBtn.textContent = 'Restoring…';
+      });
+    }
+
+    tbody.appendChild(tr);
+  });
+}
+
+// ──────────────────────────────────────────────────────────
+// Batch Confirmation Modal
+// ──────────────────────────────────────────────────────────
+function closeConfirmModal() {
+  document.getElementById('confirmBackdrop').classList.remove('open');
+}
+
+(function initConfirmModal() {
+  document.getElementById('confirmClose').addEventListener('click', closeConfirmModal);
+  document.getElementById('confirmCancel').addEventListener('click', closeConfirmModal);
+  document.getElementById('confirmBackdrop').addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) closeConfirmModal();
   });
 })();

@@ -31,6 +31,7 @@ import {
   loadCustomRules,
   evaluateRules,
 } from '../services/rules.service.js';
+import { recordAuditEntry, buildAuditEntry } from '../services/audit.service.js';
 import { AUTO_BAN_DURATION_DAYS } from '../constants.js';
 
 export async function handleCommentSubmit(
@@ -107,6 +108,12 @@ export async function handleCommentSubmit(
   if (decision.action === 'auto_approve') {
     await recordApproval(context.redis, subredditId, authorId, authorName, accountAgeDays, karma);
     await recordAutoApproval(context.redis, subredditId);
+    await recordAuditEntry(context.redis, subredditId, buildAuditEntry(
+      'auto_approve', itemId, 'comment', body.slice(0, 120),
+      authorName, analysis.category, analysis.confidence,
+      triggeredRuleName ? 'rule_engine' : 'ai_auto',
+      decision.reason,
+    ));
     return;
   }
 
@@ -117,6 +124,13 @@ export async function handleCommentSubmit(
       await recordViolation(context.redis, subredditId, authorId, authorName, accountAgeDays, karma);
       await recordAutoRemoval(context.redis, subredditId);
       console.log(`[Sentinel/comment] AUTO-REMOVED ${itemId}`);
+
+      await recordAuditEntry(context.redis, subredditId, buildAuditEntry(
+        'auto_remove', itemId, 'comment', body.slice(0, 120),
+        authorName, analysis.category, analysis.confidence,
+        triggeredRuleName ? 'rule_engine' : 'ai_auto',
+        decision.reason,
+      ));
     } catch (err) {
       console.error(`[Sentinel/comment] Remove failed for ${itemId}:`, err);
     }
@@ -136,6 +150,13 @@ export async function handleCommentSubmit(
       await recordTemporalViolation(context.redis, subredditId, authorId, itemId);
       await recordViolation(context.redis, subredditId, authorId, authorName, accountAgeDays, karma);
       await recordAutoRemoval(context.redis, subredditId);
+
+      await recordAuditEntry(context.redis, subredditId, buildAuditEntry(
+        'auto_remove', itemId, 'comment', body.slice(0, 120),
+        authorName, analysis.category, analysis.confidence,
+        triggeredRuleName ? 'rule_engine' : 'ai_auto',
+        `Auto-banned (${AUTO_BAN_DURATION_DAYS}d): ${decision.reason}`,
+      ));
     } catch (err) {
       console.error(`[Sentinel/comment] Auto-ban failed:`, err);
     }

@@ -175,6 +175,23 @@ export interface ModOverride {
 }
 
 // ──────────────────────────────────────────────
+// Audit Log Entry
+// ──────────────────────────────────────────────
+
+export interface AuditEntry {
+  timestamp: number;
+  actionType: 'auto_remove' | 'auto_approve' | 'manual_remove' | 'manual_approve' | 'manual_ban' | 'manual_ignore' | 'batch' | 'restore';
+  contentId: string;
+  contentType: 'post' | 'comment';
+  contentSnippet: string;
+  authorName: string;
+  aiCategory: string;
+  aiConfidence: number;
+  triggeredBy: string; // 'ai_auto' | 'rule_engine' | 'moderator:{username}'
+  reason: string;
+}
+
+// ──────────────────────────────────────────────
 // App Metrics
 // ──────────────────────────────────────────────
 
@@ -228,7 +245,8 @@ export interface WebviewMessage {
     | 'RULES_SAVE'
     | 'SETTINGS_SAVE'
     | 'LOAD_MORE'
-    | 'REFRESH';
+    | 'REFRESH'
+    | 'AUDIT_RESTORE';
   payload?: unknown;
 }
 

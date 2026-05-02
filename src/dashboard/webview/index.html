@@ -75,6 +75,9 @@
     <button class="tab" data-tab="settings">
       <span class="tab-icon">⚙️</span> Settings
     </button>
+    <button class="tab" data-tab="audit">
+      <span class="tab-icon">📜</span> Audit Log
+    </button>
   </nav>
 
 
@@ -265,6 +268,32 @@
       </div>
     </div>
 
+    <!-- ── AUDIT LOG TAB ──────────────────────────────── -->
+    <div class="tab-panel" id="panel-audit">
+      <div class="settings-notice">
+        <span>📜</span>
+        <span>Complete audit trail of <strong>every</strong> moderation action — automated and manual. Use <strong>Restore</strong> to undo auto-removals.</span>
+      </div>
+      <div class="audit-table-wrap">
+        <table class="audit-table" id="auditTable">
+          <thead>
+            <tr>
+              <th>Time</th>
+              <th>Action</th>
+              <th>Content</th>
+              <th>Author</th>
+              <th>Triggered By</th>
+              <th>Confidence</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="auditBody">
+            <tr class="audit-empty"><td colspan="7">No audit entries yet. Actions will appear here automatically.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
   </main>
 
 
@@ -284,6 +313,26 @@
       </div>
       <div class="modal-body" id="modalBody"></div>
       <div class="modal-actions" id="modalActions"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════ -->
+  <!-- BATCH CONFIRMATION MODAL                            -->
+  <!-- ═══════════════════════════════════════════════════ -->
+  <div class="modal-backdrop" id="confirmBackdrop">
+    <div class="modal confirm-modal">
+      <div class="modal-header">
+        <div class="modal-title" id="confirmTitle">⚠️ Confirm Batch Action</div>
+        <button class="icon-btn" id="confirmClose">✕</button>
+      </div>
+      <div class="modal-body">
+        <p id="confirmMessage" class="confirm-message"></p>
+        <div id="confirmItemList" class="confirm-item-list"></div>
+      </div>
+      <div class="modal-actions">
+        <button class="action-btn btn-ignore" id="confirmCancel">Cancel</button>
+        <button class="action-btn btn-remove" id="confirmProceed">⚡ Confirm</button>
+      </div>
     </div>
   </div>
 

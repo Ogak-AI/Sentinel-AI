@@ -48,6 +48,9 @@ export const Keys = {
 
   /** String: batch selection state (JSON array of itemIds) */
   batchSelection: (subredditId: string) => `sentinel:batch:${subredditId}`,
+
+  /** Sorted set: member=JSON audit entry, score=timestamp. Rolling action audit log. */
+  audit: (subredditId: string) => `sentinel:audit:${subredditId}`,
 };
 
 
@@ -103,6 +106,9 @@ export const MAX_QUEUE_SIZE = 500;
 
 /** Max override log entries kept per subreddit */
 export const MAX_OVERRIDE_LOG = 500;
+
+/** Max audit log entries kept per subreddit */
+export const MAX_AUDIT_LOG = 200;
 
 /** How long a processed-dedup key lives (24 hours in seconds) */
 export const PROCESSED_TTL_SECONDS = 86400;

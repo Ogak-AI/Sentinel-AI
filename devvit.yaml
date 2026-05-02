@@ -1,5 +1,5 @@
-name: sentinel-ai
-version: 0.0.1
+name: sentinel-ai-modtool
+version: 1.0.0
 description: "Sentinel AI: Smart Moderation & Queue Prioritization Engine"
 
 # Runtime permissions

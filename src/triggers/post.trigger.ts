@@ -40,6 +40,7 @@ import {
   loadCustomRules,
   evaluateRules,
 } from '../services/rules.service.js';
+import { recordAuditEntry, buildAuditEntry } from '../services/audit.service.js';
 import { AUTO_BAN_DURATION_DAYS } from '../constants.js';
 
 export async function handlePostSubmit(
@@ -128,6 +129,12 @@ export async function handlePostSubmit(
   if (decision.action === 'auto_approve') {
     await recordApproval(context.redis, subredditId, authorId, authorName, accountAgeDays, karma);
     await recordAutoApproval(context.redis, subredditId);
+    await recordAuditEntry(context.redis, subredditId, buildAuditEntry(
+      'auto_approve', itemId, 'post', (title + ' ' + body).slice(0, 120),
+      authorName, analysis.category, analysis.confidence,
+      triggeredRuleName ? 'rule_engine' : 'ai_auto',
+      decision.reason,
+    ));
     return;
   }
 
@@ -150,6 +157,13 @@ export async function handlePostSubmit(
       }
 
       console.log(`[Sentinel/post] AUTO-REMOVED ${itemId}`);
+
+      await recordAuditEntry(context.redis, subredditId, buildAuditEntry(
+        'auto_remove', itemId, 'post', (title + ' ' + body).slice(0, 120),
+        authorName, analysis.category, analysis.confidence,
+        triggeredRuleName ? 'rule_engine' : 'ai_auto',
+        decision.reason,
+      ));
     } catch (err) {
       console.error(`[Sentinel/post] Remove failed for ${itemId}:`, err);
     }
@@ -171,6 +185,13 @@ export async function handlePostSubmit(
       await recordAutoRemoval(context.redis, subredditId);
 
       console.log(`[Sentinel/post] AUTO-BANNED ${authorName} (${AUTO_BAN_DURATION_DAYS}d) for ${itemId}`);
+
+      await recordAuditEntry(context.redis, subredditId, buildAuditEntry(
+        'auto_remove', itemId, 'post', (title + ' ' + body).slice(0, 120),
+        authorName, analysis.category, analysis.confidence,
+        triggeredRuleName ? 'rule_engine' : 'ai_auto',
+        `Auto-banned (${AUTO_BAN_DURATION_DAYS}d): ${decision.reason}`,
+      ));
     } catch (err) {
       console.error(`[Sentinel/post] Auto-ban failed for ${authorName}:`, err);
     }
