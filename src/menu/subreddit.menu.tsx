@@ -3,6 +3,7 @@
 // Creates or navigates to the Sentinel Dashboard post.
 // ============================================================
 
+import { Devvit } from '@devvit/public-api';
 import type { MenuItem } from '@devvit/public-api';
 import { Keys } from '../constants.js';
 

@@ -45,9 +45,14 @@ async function recordModOverride(
   };
 
   const key = Keys.overrides(subredditId);
-  await redis.lPush(key, [JSON.stringify(override)]);
-  // Cap at MAX_OVERRIDE_LOG entries
-  await redis.lTrim(key, 0, MAX_OVERRIDE_LOG - 1);
+  const score = override.timestamp;
+  await redis.zAdd(key, { member: JSON.stringify(override), score });
+  
+  // Cap at MAX_OVERRIDE_LOG entries (remove oldest which have lowest scores)
+  const count = await redis.zCard(key);
+  if (count > MAX_OVERRIDE_LOG) {
+    await redis.zRemRangeByRank(key, 0, count - MAX_OVERRIDE_LOG - 1);
+  }
 }
 
 
@@ -82,7 +87,7 @@ async function loadDashboardData(context: Context): Promise<InitDataPayload> {
   // Load override log for adaptive learning stats
   let overrideCount = 0;
   try {
-    const overrides = await context.redis.lRange(Keys.overrides(subredditId), 0, -1);
+    const overrides = await context.redis.zRange(Keys.overrides(subredditId), 0, -1, { by: 'rank' });
     overrideCount = overrides?.length ?? 0;
   } catch {
     // Not critical
@@ -190,9 +195,9 @@ async function handleAction(
       }
 
       case 'lock': {
-        await context.reddit.lock(itemId);
-        await resolveQueueItem(context.redis, subredditId, itemId, 'ignored', modUsername, 'Locked by moderator');
-        return { success: true, message: '🔒 Content locked' };
+        // Fallback: Just ignore/dismiss if locking is unsupported in this API version
+        await resolveQueueItem(context.redis, subredditId, itemId, 'ignored', modUsername, 'Locked/Dismissed by moderator');
+        return { success: true, message: '🔒 Content dismissed (lock unsupported)' };
       }
     }
 
@@ -304,55 +309,50 @@ export const SentinelDashboardPost = Devvit.addCustomPostType({
     const { useState } = context;
     const [launched, setLaunched] = useState(false);
 
-    const webView = context.useWebView<WebviewMessage, WebviewMessage>({
-      url: 'index.html',
-
-      onMessage: async (message, webViewHook) => {
-        const refreshAndSend = async (extra: Record<string, unknown> = {}) => {
-          const data = await loadDashboardData(context);
-          const derived = computeDerivedStats(data.metrics);
-          webViewHook.postMessage({
+    const onMessage = async (message: WebviewMessage) => {
+      const refreshAndSend = async (extra: Record<string, unknown> = {}) => {
+        const data = await loadDashboardData(context);
+        const derived = computeDerivedStats(data.metrics);
+        context.ui.webView.postMessage('sentinel-dashboard',
+          JSON.parse(JSON.stringify({
             type: 'INIT_DATA',
             payload: { ...data, derived, ...extra },
-          });
-        };
+          })),
+        );
+      };
 
-        if (message.type === 'INIT_DATA' || message.type === 'REFRESH') {
-          await refreshAndSend();
-        }
+      if (message.type === 'INIT_DATA' || message.type === 'REFRESH') {
+        await refreshAndSend();
+      }
 
-        if (message.type === 'ACTION_REQUEST') {
-          const payload = message.payload as ActionRequestPayload;
-          const result = await handleAction(payload, context);
-          await refreshAndSend({ actionResult: result });
-        }
+      if (message.type === 'ACTION_REQUEST') {
+        const payload = message.payload as ActionRequestPayload;
+        const result = await handleAction(payload, context);
+        await refreshAndSend({ actionResult: result });
+      }
 
-        if (message.type === 'BATCH_ACTION') {
-          const payload = message.payload as BatchActionPayload;
-          const result = await handleBatchAction(payload, context);
-          await refreshAndSend({ actionResult: result });
-        }
+      if (message.type === 'BATCH_ACTION') {
+        const payload = message.payload as BatchActionPayload;
+        const result = await handleBatchAction(payload, context);
+        await refreshAndSend({ actionResult: result });
+      }
 
-        if (message.type === 'RULES_SAVE') {
-          const payload = message.payload as RulesSavePayload;
-          try {
-            const subreddit = await context.reddit.getCurrentSubreddit();
-            await saveCustomRules(context.redis, subreddit.id, payload.rules);
-            await refreshAndSend({ actionResult: { success: true, message: '✅ Rules saved successfully' } });
-          } catch {
-            webViewHook.postMessage({
+      if (message.type === 'RULES_SAVE') {
+        const payload = message.payload as RulesSavePayload;
+        try {
+          const subreddit = await context.reddit.getCurrentSubreddit();
+          await saveCustomRules(context.redis, subreddit.id, payload.rules);
+          await refreshAndSend({ actionResult: { success: true, message: '✅ Rules saved successfully' } });
+        } catch {
+          context.ui.webView.postMessage('sentinel-dashboard',
+            JSON.parse(JSON.stringify({
               type: 'INIT_DATA',
               payload: { actionResult: { success: false, message: '❌ Failed to save rules' } },
-            });
-          }
+            })),
+          );
         }
-      },
-
-
-      onUnmount: () => {
-        setLaunched(false);
-      },
-    });
+      }
+    };
 
     // ── Landing state (before webview mounts) ────────────
     if (!launched) {
@@ -377,7 +377,6 @@ export const SentinelDashboardPost = Devvit.addCustomPostType({
             size="large"
             onPress={() => {
               setLaunched(true);
-              webView.mount();
             }}
           >
             🚀 Open Dashboard
@@ -401,6 +400,7 @@ export const SentinelDashboardPost = Devvit.addCustomPostType({
           url="index.html"
           width="100%"
           height="100%"
+          onMessage={(msg) => onMessage(msg as unknown as WebviewMessage)}
         />
       </vstack>
     );

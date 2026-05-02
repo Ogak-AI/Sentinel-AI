@@ -75,8 +75,13 @@ async function resolveAndUpdate(
               modUsername,
               timestamp: Date.now(),
             };
-            await context.redis.lPush(Keys.overrides(subredditId), [JSON.stringify(override)]);
-            await context.redis.lTrim(Keys.overrides(subredditId), 0, MAX_OVERRIDE_LOG - 1);
+            const score = override.timestamp;
+            await context.redis.zAdd(Keys.overrides(subredditId), { member: JSON.stringify(override), score });
+            
+            const count = await context.redis.zCard(Keys.overrides(subredditId));
+            if (count > MAX_OVERRIDE_LOG) {
+              await context.redis.zRemRangeByRank(Keys.overrides(subredditId), 0, count - MAX_OVERRIDE_LOG - 1);
+            }
           }
         }
         await recordManualApproval(context.redis, subredditId);
