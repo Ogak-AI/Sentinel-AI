@@ -1,0 +1,93 @@
+name: sentinel-ai
+version: 0.0.1
+description: "Sentinel AI: Smart Moderation & Queue Prioritization Engine"
+
+# Runtime permissions
+permissions:
+  - reddit
+  - http
+  - redis
+  - scheduler
+
+# HTTP allowlist (must whitelist all external domains)
+httpAllowlist:
+  - "https://api.openai.com"
+
+# App settings (configurable by installing moderators)
+settings:
+  - name: openaiApiKey
+    label: "OpenAI API Key"
+    description: "Your OpenAI API key for AI-powered content analysis. Leave blank to use rule-based fallback."
+    type: string
+    isSecret: true
+    required: false
+
+  - name: aiModel
+    label: "AI Model"
+    description: "OpenAI model to use. gpt-4o-mini is recommended (fast + cheap)."
+    type: select
+    options:
+      - label: "GPT-4o Mini (Recommended)"
+        value: "gpt-4o-mini"
+      - label: "GPT-4o"
+        value: "gpt-4o"
+      - label: "GPT-3.5 Turbo"
+        value: "gpt-3.5-turbo"
+    defaultValue: "gpt-4o-mini"
+    required: false
+
+  - name: autoRemoveThreshold
+    label: "Auto-Remove Confidence Threshold (%)"
+    description: "Posts/comments with AI confidence above this threshold are automatically removed. Set to 100 to disable auto-removal."
+    type: number
+    defaultValue: 92
+    required: false
+
+  - name: autoApproveTrustedUsers
+    label: "Auto-Approve Trusted Users"
+    description: "Skip AI analysis for users with a trust score above 80. Reduces API calls."
+    type: boolean
+    defaultValue: true
+    required: false
+
+  - name: trustedUserThreshold
+    label: "Trusted User Score Threshold"
+    description: "Trust score (0-100) above which a user is considered trusted."
+    type: number
+    defaultValue: 80
+    required: false
+
+  - name: bannedKeywords
+    label: "Banned Keywords (comma-separated)"
+    description: "Always flag content containing these words, regardless of AI score."
+    type: string
+    defaultValue: ""
+    required: false
+
+  - name: subredditRules
+    label: "Subreddit Rules (one per line)"
+    description: "List your subreddit rules here. Sentinel uses these to give context to the AI."
+    type: paragraph
+    defaultValue: "1. Be respectful\n2. No spam\n3. No self-promotion\n4. Stay on topic"
+    required: false
+
+  - name: removalComment
+    label: "Auto-Removal Comment Template"
+    description: "Posted when content is auto-removed. Use {reason} as placeholder."
+    type: paragraph
+    defaultValue: "Your post/comment was automatically removed by Sentinel AI for the following reason: {reason}. If you believe this was a mistake, please message the moderators."
+    required: false
+
+  - name: enableRemovalComments
+    label: "Post Removal Reason Comments"
+    description: "Post a comment explaining the removal when content is auto-removed."
+    type: boolean
+    defaultValue: true
+    required: false
+
+  - name: lowTrustThreshold
+    label: "Low Trust Score Threshold"
+    description: "Trust score (0-100) below which a user is aggressively flagged."
+    type: number
+    defaultValue: 25
+    required: false

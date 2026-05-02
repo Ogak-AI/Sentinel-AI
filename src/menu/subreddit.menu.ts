@@ -1,0 +1,59 @@
+// ============================================================
+// Sentinel AI – Subreddit Menu Action
+// Creates or navigates to the Sentinel Dashboard post.
+// ============================================================
+
+import type { MenuItem } from '@devvit/public-api';
+import { Keys } from '../constants.js';
+
+export const openSentinelDashboard: MenuItem = {
+  label: '🛡️ Open Sentinel Dashboard',
+  location: 'subreddit',
+  forUserType: 'moderator',
+  onPress: async (_event, context) => {
+    try {
+      const subreddit = await context.reddit.getCurrentSubreddit();
+      const subredditId = subreddit.id;
+      const subredditName = subreddit.name;
+
+      // Check if a dashboard post already exists
+      const existingPostId = await context.redis.get(Keys.dashboardPost(subredditId));
+
+      if (existingPostId) {
+        // Navigate to existing dashboard
+        context.ui.navigateTo(`https://reddit.com/r/${subredditName}/comments/${existingPostId.replace('t3_', '')}/`);
+        return;
+      }
+
+      // Create a new dashboard post
+      const post = await context.reddit.submitPost({
+        subredditName,
+        title: '🛡️ Sentinel AI — Moderation Dashboard',
+        // Custom post type — renders the Devvit interactive UI
+        preview: (
+          <vstack alignment="center middle" height="100%">
+            <image url="sentinel_logo.png" imageWidth={64} imageHeight={64} />
+            <text size="xlarge" weight="bold">Sentinel AI</text>
+            <text size="medium" color="neutral-content-weak">Loading moderation dashboard…</text>
+          </vstack>
+        ),
+      });
+
+      // Store the post ID so we don't duplicate
+      await context.redis.set(Keys.dashboardPost(subredditId), post.id);
+
+      // Pin the post to the subreddit
+      try {
+        await post.sticky(1);
+      } catch {
+        // Stickying may fail if there are already 2 stickied posts — non-critical
+      }
+
+      context.ui.navigateTo(post);
+      context.ui.showToast({ text: '🛡️ Sentinel Dashboard created!', appearance: 'success' });
+    } catch (err) {
+      console.error('[Sentinel] Failed to create/open dashboard:', err);
+      context.ui.showToast({ text: '❌ Could not open dashboard.', appearance: 'neutral' });
+    }
+  },
+};
