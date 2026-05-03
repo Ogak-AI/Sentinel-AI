@@ -14,7 +14,7 @@
   <!-- ═══════════════════════════════════════════════════ -->
   <header class="app-header">
     <div class="header-left">
-      <div class="logo">🛡️</div>
+      <div class="logo"></div>
       <div class="header-title">
         <span class="app-name">Sentinel AI</span>
         <span class="app-tagline">Adaptive Moderation Engine</span>
@@ -34,22 +34,22 @@
   <!-- ═══════════════════════════════════════════════════ -->
   <div class="stats-row" id="statsRow">
     <div class="stat-card" id="statScanned">
-      <div class="stat-icon">📡</div>
+      <div class="stat-icon"></div>
       <div class="stat-value" id="totalScanned">—</div>
       <div class="stat-label">Content Scanned</div>
     </div>
     <div class="stat-card highlight-orange" id="statQueue">
-      <div class="stat-icon">⚡</div>
+      <div class="stat-icon"></div>
       <div class="stat-value" id="queueSize">—</div>
       <div class="stat-label">Pending Review</div>
     </div>
     <div class="stat-card highlight-green" id="statAutoMod">
-      <div class="stat-icon">🤖</div>
+      <div class="stat-icon"></div>
       <div class="stat-value" id="autoModRate">—</div>
       <div class="stat-label">Auto-Mod Rate</div>
     </div>
     <div class="stat-card highlight-purple" id="statTimeSaved">
-      <div class="stat-icon">⏱️</div>
+      <div class="stat-icon"></div>
       <div class="stat-value" id="timeSaved">—</div>
       <div class="stat-label">Hours Saved</div>
     </div>
@@ -60,23 +60,23 @@
   <!-- ═══════════════════════════════════════════════════ -->
   <nav class="tab-bar">
     <button class="tab active" data-tab="queue">
-      <span class="tab-icon">⚡</span> Queue
+      <span class="tab-icon"></span> Queue
       <span class="tab-badge" id="queueBadge">0</span>
     </button>
     <button class="tab" data-tab="users">
-      <span class="tab-icon">👤</span> Users
+      <span class="tab-icon"></span> Users
     </button>
     <button class="tab" data-tab="stats">
-      <span class="tab-icon">📊</span> Analytics
+      <span class="tab-icon"></span> Analytics
     </button>
     <button class="tab" data-tab="rules">
-      <span class="tab-icon">📋</span> Rules
+      <span class="tab-icon"></span> Rules
     </button>
     <button class="tab" data-tab="settings">
-      <span class="tab-icon">⚙️</span> Settings
+      <span class="tab-icon"></span> Settings
     </button>
     <button class="tab" data-tab="audit">
-      <span class="tab-icon">📜</span> Audit Log
+      <span class="tab-icon"></span> Audit Log
     </button>
   </nav>
 
@@ -97,18 +97,18 @@
           </span>
         </div>
         <div class="batch-actions">
-          <button class="quick-btn approve" onclick="dispatchBatchAction('approve')">✅ Approve All</button>
-          <button class="quick-btn remove" onclick="dispatchBatchAction('remove')">🗑️ Remove All</button>
-          <button class="quick-btn dismiss" onclick="dispatchBatchAction('ignore')">👁️ Dismiss All</button>
+          <button class="quick-btn approve" onclick="dispatchBatchAction('approve')">Approve All</button>
+          <button class="quick-btn remove" onclick="dispatchBatchAction('remove')">Remove All</button>
+          <button class="quick-btn dismiss" onclick="dispatchBatchAction('ignore')">Dismiss All</button>
         </div>
       </div>
 
       <div class="panel-toolbar">
         <div class="filter-group">
           <button class="filter-btn active" data-filter="all">All</button>
-          <button class="filter-btn" data-filter="high">🔴 High</button>
-          <button class="filter-btn" data-filter="medium">🟡 Medium</button>
-          <button class="filter-btn" data-filter="low">🟢 Low</button>
+          <button class="filter-btn" data-filter="high">High</button>
+          <button class="filter-btn" data-filter="medium">Medium</button>
+          <button class="filter-btn" data-filter="low">Low</button>
         </div>
         <div class="filter-group">
           <select class="select-input" id="categoryFilter">
@@ -125,7 +125,7 @@
 
       <div class="queue-list" id="queueList">
         <div class="empty-state" id="queueEmpty">
-          <div class="empty-icon">✨</div>
+          <div class="empty-icon"></div>
           <div class="empty-title">Queue is clean!</div>
           <div class="empty-sub">No pending items require review. Sentinel is actively watching.</div>
         </div>
@@ -135,11 +135,11 @@
 
     <!-- ── USERS TAB ─────────────────────────────────── -->
     <div class="tab-panel" id="panel-users">
-      <div class="section-title">⚠️ Highest Risk Users</div>
+      <div class="section-title">Highest Risk Users</div>
       <div class="section-subtitle">Users sorted by lowest trust score — most likely to violate rules</div>
       <div class="users-list" id="usersList">
         <div class="empty-state" id="usersEmpty">
-          <div class="empty-icon">🌟</div>
+          <div class="empty-icon"></div>
           <div class="empty-title">No risk users found</div>
           <div class="empty-sub">All tracked users have acceptable trust scores. The community is healthy!</div>
         </div>
@@ -152,7 +152,7 @@
 
         <!-- Impact Summary (THE key judging differentiator) -->
         <div class="stats-section impact-section">
-          <div class="section-title">🏆 Impact Summary</div>
+          <div class="section-title">Impact Summary</div>
           <div class="impact-grid" id="impactGrid">
             <div class="impact-card">
               <div class="impact-value" id="impactAutoRate">—</div>
@@ -178,15 +178,15 @@
         </div>
 
         <div class="stats-section">
-          <div class="section-title">📈 Activity Overview</div>
+          <div class="section-title">Activity Overview</div>
           <div class="metrics-list" id="metricsList"></div>
         </div>
         <div class="stats-section">
-          <div class="section-title">🏷️ Violations by Category</div>
+          <div class="section-title">Violations by Category</div>
           <div class="chart-container" id="violationChart"></div>
         </div>
         <div class="stats-section">
-          <div class="section-title">🤖 AI Performance</div>
+          <div class="section-title">AI Performance</div>
           <div class="perf-list" id="perfList"></div>
         </div>
       </div>
@@ -195,13 +195,13 @@
     <!-- ── RULES TAB ─────────────────────────────────── -->
     <div class="tab-panel" id="panel-rules">
       <div class="settings-notice">
-        <span>📋</span>
+        <span></span>
         <span>Custom rules let you define keywords and actions for specific violations unique to your community. Rules are evaluated <strong>before</strong> AI analysis and can short-circuit it entirely.</span>
       </div>
 
       <!-- Add New Rule Form -->
       <div class="add-rule-form" id="addRuleForm">
-        <div class="section-title">➕ Add New Rule</div>
+        <div class="section-title">Add New Rule</div>
         <div class="rule-form-grid">
           <div class="form-field">
             <label class="form-label">Rule Name</label>
@@ -224,7 +224,7 @@
             <input type="text" class="form-input" id="newRuleReason" placeholder="e.g. Self-promotion is not allowed" />
           </div>
           <div class="form-field">
-            <button class="add-rule-btn" id="addRuleBtn">➕ Add Rule</button>
+            <button class="add-rule-btn" id="addRuleBtn">Add Rule</button>
           </div>
         </div>
       </div>
@@ -236,7 +236,7 @@
     <!-- ── SETTINGS TAB ──────────────────────────────── -->
     <div class="tab-panel" id="panel-settings">
       <div class="settings-notice">
-        <span>⚙️</span>
+        <span></span>
         <span>Core settings are configured in the <strong>App Settings</strong> panel in your subreddit's Community Apps section. The values below are read-only previews of your current configuration.</span>
       </div>
 
@@ -271,7 +271,7 @@
     <!-- ── AUDIT LOG TAB ──────────────────────────────── -->
     <div class="tab-panel" id="panel-audit">
       <div class="settings-notice">
-        <span>📜</span>
+        <span></span>
         <span>Complete audit trail of <strong>every</strong> moderation action — automated and manual. Use <strong>Restore</strong> to undo auto-removals.</span>
       </div>
       <div class="audit-table-wrap">
@@ -322,7 +322,7 @@
   <div class="modal-backdrop" id="confirmBackdrop">
     <div class="modal confirm-modal">
       <div class="modal-header">
-        <div class="modal-title" id="confirmTitle">⚠️ Confirm Batch Action</div>
+        <div class="modal-title" id="confirmTitle">Confirm Batch Action</div>
         <button class="icon-btn" id="confirmClose">✕</button>
       </div>
       <div class="modal-body">
@@ -331,7 +331,7 @@
       </div>
       <div class="modal-actions">
         <button class="action-btn btn-ignore" id="confirmCancel">Cancel</button>
-        <button class="action-btn btn-remove" id="confirmProceed">⚡ Confirm</button>
+        <button class="action-btn btn-remove" id="confirmProceed">Confirm</button>
       </div>
     </div>
   </div>

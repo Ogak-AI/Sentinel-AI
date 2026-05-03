@@ -195,11 +195,11 @@ function buildQueueCard(item) {
 
   const catLabel = catName(item.category);
   const catClass = `cat-${item.category}`;
-  const typeIcon = item.type === 'post' ? '📄' : '💬';
+  const typeIcon = item.type === 'post' ? 'Post' : 'Comment';
   const timeAgo = formatTimeAgo(item.createdAt);
   const confidence = item.confidence + '%';
   const suggested = item.suggestedAction;
-  const sourceTag = item.analysisSource === 'openai' ? '🤖 AI' : '🔍 Rule';
+  const sourceTag = item.analysisSource === 'openai' ? 'AI' : 'Rule';
   const isSelected = state.batchSelected.has(item.id);
 
   div.innerHTML = `
@@ -218,31 +218,31 @@ function buildQueueCard(item) {
       <span style="font-size:10px;color:var(--text-muted)">${timeAgo}</span>
     </div>
 
-    ${item.title ? `<div class="item-title">${typeIcon} ${escHtml(item.title)}</div>` : ''}
+    ${item.title ? `<div class="item-title">${typeIcon}: ${escHtml(item.title)}</div>` : ''}
     <div class="item-body">${escHtml(item.body)}</div>
 
     <div class="item-explanation">
-      <span>🔍</span>
+      <span></span>
       <span>${escHtml(item.explanation)}</span>
     </div>
 
     ${item.decisionReason ? `
     <div class="item-explanation" style="background:rgba(99,102,241,0.08);border-left-color:var(--accent)">
-      <span>🧠</span>
+      <span></span>
       <span><strong>Decision:</strong> ${escHtml(item.decisionReason)}</span>
     </div>` : ''}
 
     <div class="item-footer">
       <div class="item-author">
-        <span>👤</span>
+        <span></span>
         <span>u/${escHtml(item.authorName)}</span>
-        ${suggested === 'ban' ? '<span style="color:var(--red);font-weight:700;margin-left:4px">⚠️ Ban suggested</span>' : ''}
+        ${suggested === 'ban' ? '<span style="color:var(--red);font-weight:700;margin-left:4px">Ban suggested</span>' : ''}
       </div>
       <div class="quick-actions">
-        <button class="quick-btn approve" data-id="${item.id}" data-action="approve">✅ Approve</button>
-        <button class="quick-btn remove" data-id="${item.id}" data-action="remove">🗑️ Remove</button>
-        ${suggested === 'ban' ? `<button class="quick-btn ban" data-id="${item.id}" data-action="ban">🔨 Ban</button>` : ''}
-        <button class="quick-btn dismiss" data-id="${item.id}" data-action="ignore">👁️</button>
+        <button class="quick-btn approve" data-id="${item.id}" data-action="approve">Approve</button>
+        <button class="quick-btn remove" data-id="${item.id}" data-action="remove">Remove</button>
+        ${suggested === 'ban' ? `<button class="quick-btn ban" data-id="${item.id}" data-action="ban">Ban</button>` : ''}
+        <button class="quick-btn dismiss" data-id="${item.id}" data-action="ignore">Dismiss</button>
       </div>
     </div>
   `;
@@ -319,9 +319,9 @@ function dispatchBatchAction(action) {
   previewItems.forEach((item, idx) => {
     const row = document.createElement('div');
     row.className = 'confirm-item-row';
-    row.innerHTML = `
+      row.innerHTML = `
       <span class="confirm-item-idx">${idx + 1}.</span>
-      <span class="confirm-item-title">${item.type === 'post' ? '📄' : '💬'} ${escHtml(item.title || item.body.slice(0, 80))}</span>
+      <span class="confirm-item-title">${item.type === 'post' ? 'Post' : 'Comment'}: ${escHtml(item.title || item.body.slice(0, 80))}</span>
     `;
     confirmList.appendChild(row);
   });
@@ -334,7 +334,7 @@ function dispatchBatchAction(action) {
 
   // Set up confirm button
   const proceedBtn = document.getElementById('confirmProceed');
-  proceedBtn.textContent = `⚡ ${actionLabel.charAt(0).toUpperCase() + actionLabel.slice(1)} ${ids.length} items`;
+  proceedBtn.textContent = `${actionLabel.charAt(0).toUpperCase() + actionLabel.slice(1)} ${ids.length} items`;
   proceedBtn.onclick = () => {
     postToDevvit({
       type: 'BATCH_ACTION',
@@ -372,7 +372,7 @@ function openModal(item) {
   const body = document.getElementById('modalBody');
   const actions = document.getElementById('modalActions');
 
-  title.textContent = item.type === 'post' ? '📄 Post Detail' : '💬 Comment Detail';
+  title.textContent = item.type === 'post' ? 'Post Detail' : 'Comment Detail';
 
   body.innerHTML = `
     <div class="modal-field">
@@ -397,12 +397,12 @@ function openModal(item) {
     </div>
     ${item.decisionReason ? `
     <div class="modal-field">
-      <div class="modal-field-label">🧠 Decision Engine Reasoning</div>
+      <div class="modal-field-label">Decision Engine Reasoning</div>
       <div class="modal-field-value" style="color:var(--text-accent);background:rgba(99,102,241,0.08);padding:8px;border-radius:6px;border-left:3px solid var(--accent)">${escHtml(item.decisionReason)}</div>
     </div>` : ''}
     ${item.triggeredRule ? `
     <div class="modal-field">
-      <div class="modal-field-label">📋 Triggered Rule</div>
+      <div class="modal-field-label">Triggered Rule</div>
       <div class="modal-field-value" style="color:var(--yellow)">${escHtml(item.triggeredRule)}</div>
     </div>` : ''}
     <div class="modal-field">
@@ -420,11 +420,11 @@ function openModal(item) {
   `;
 
   actions.innerHTML = `
-    <button class="action-btn btn-approve" data-action="approve" data-id="${item.id}">✅ Approve</button>
-    <button class="action-btn btn-remove" data-action="remove" data-id="${item.id}">🗑️ Remove</button>
-    <button class="action-btn btn-ban" data-action="ban" data-id="${item.id}">🔨 Ban (30d)</button>
-    <button class="action-btn btn-lock" data-action="lock" data-id="${item.id}">🔒 Lock</button>
-    <button class="action-btn btn-ignore" data-action="ignore" data-id="${item.id}">👁️ Dismiss</button>
+    <button class="action-btn btn-approve" data-action="approve" data-id="${item.id}">Approve</button>
+    <button class="action-btn btn-remove" data-action="remove" data-id="${item.id}">Remove</button>
+    <button class="action-btn btn-ban" data-action="ban" data-id="${item.id}">Ban (30d)</button>
+    <button class="action-btn btn-lock" data-action="lock" data-id="${item.id}">Lock</button>
+    <button class="action-btn btn-ignore" data-action="ignore" data-id="${item.id}">Dismiss</button>
   `;
 
   actions.querySelectorAll('.action-btn').forEach(btn => {
@@ -565,9 +565,9 @@ function renderSettings() {
   if (!s) return;
 
   setText('cfg-threshold', (s.autoRemoveThreshold ?? '—') + (s.autoRemoveThreshold ? '%' : ''));
-  setText('cfg-autoApprove', s.autoApproveTrustedUsers ? '✅ Enabled' : '❌ Disabled');
+  setText('cfg-autoApprove', s.autoApproveTrustedUsers ? 'Enabled' : 'Disabled');
   setText('cfg-trustThreshold', (s.trustedUserThreshold ?? '—') + (s.trustedUserThreshold ? '/100' : ''));
-  setText('cfg-removalComments', s.enableRemovalComments ? '✅ Enabled' : '❌ Disabled');
+  setText('cfg-removalComments', s.enableRemovalComments ? 'Enabled' : 'Disabled');
   setText('cfg-rules', s.subredditRules ?? '—');
 }
 
@@ -596,11 +596,11 @@ function renderRules() {
         <div class="rule-name">${escHtml(rule.name)} <span class="rule-status" style="background:${rule.enabled ? 'var(--green)' : 'var(--text-muted)'}22;color:${rule.enabled ? 'var(--green)' : 'var(--text-muted)'}">${rule.enabled ? 'Active' : 'Disabled'}</span></div>
         <div style="font-size:11px;color:${actionColor};font-weight:600">Action: ${rule.action.toUpperCase()} @ ${rule.threshold}%</div>
       </div>
-      <div style="font-size:12px;color:var(--text-muted);margin:6px 0">⚠️ ${escHtml(rule.reason)}</div>
-      <div style="font-size:11px;color:var(--text-accent)">🔑 Keywords: ${rule.keywords.map(k => `<code style="background:#ffffff11;padding:1px 4px;border-radius:3px">${escHtml(k)}</code>`).join(', ')}</div>
+      <div style="font-size:12px;color:var(--text-muted);margin:6px 0">${escHtml(rule.reason)}</div>
+      <div style="font-size:11px;color:var(--text-accent)">Keywords: ${rule.keywords.map(k => `<code style="background:#ffffff11;padding:1px 4px;border-radius:3px">${escHtml(k)}</code>`).join(', ')}</div>
       <div style="margin-top:10px;display:flex;gap:8px">
-        <button class="quick-btn ${rule.enabled ? 'dismiss' : 'approve'}" data-idx="${idx}" data-toggle="true">${rule.enabled ? '⏸️ Disable' : '▶️ Enable'}</button>
-        <button class="quick-btn remove" data-idx="${idx}" data-delete="true">🗑️ Delete</button>
+        <button class="quick-btn ${rule.enabled ? 'dismiss' : 'approve'}" data-idx="${idx}" data-toggle="true">${rule.enabled ? 'Disable' : 'Enable'}</button>
+        <button class="quick-btn remove" data-idx="${idx}" data-delete="true">Delete</button>
       </div>
     `;
 
@@ -664,19 +664,19 @@ function formatTimeAgo(epochMs) {
 
 function catName(cat) {
   const names = {
-    spam: '🔵 Spam',
-    toxicity: '🔴 Toxic',
-    hate_speech: '🔴 Hate',
-    scam: '🟠 Scam',
-    rule_violation: '🟡 Rule Violation',
-    low_effort: '🔵 Low Effort',
-    clean: '🟢 Clean',
+    spam: 'Spam',
+    toxicity: 'Toxic',
+    hate_speech: 'Hate',
+    scam: 'Scam',
+    rule_violation: 'Rule Violation',
+    low_effort: 'Low Effort',
+    clean: 'Clean',
   };
   return names[cat] || cat;
 }
 
 function priorityLabel(level) {
-  return level === 'high' ? '🔴 High' : level === 'medium' ? '🟡 Medium' : '🟢 Low';
+  return level === 'high' ? 'High' : level === 'medium' ? 'Medium' : 'Low';
 }
 
 function suggestedColor(action) {
@@ -726,7 +726,7 @@ function setText(id, text) {
     const reason = document.getElementById('newRuleReason').value.trim();
 
     if (!name || !keywordsRaw) {
-      showToast('⚠️ Rule name and keywords are required');
+      showToast('Rule name and keywords are required');
       return;
     }
 
@@ -748,7 +748,7 @@ function setText(id, text) {
     document.getElementById('newRuleName').value = '';
     document.getElementById('newRuleKeywords').value = '';
     document.getElementById('newRuleReason').value = '';
-    showToast('✅ Rule added — saving…');
+    showToast('Rule added — saving…');
   });
 })();
 
@@ -772,14 +772,14 @@ function renderAuditLog() {
     const tr = document.createElement('tr');
 
     const actionLabels = {
-      auto_remove: '🤖 Auto Remove',
-      auto_approve: '🤖 Auto Approve',
-      manual_remove: '🗑️ Removed',
-      manual_approve: '✅ Approved',
-      manual_ban: '🔨 Banned',
-      manual_ignore: '👁️ Dismissed',
-      batch: '⚡ Batch',
-      restore: '♻️ Restored',
+      auto_remove: 'Auto Remove',
+      auto_approve: 'Auto Approve',
+      manual_remove: 'Removed',
+      manual_approve: 'Approved',
+      manual_ban: 'Banned',
+      manual_ignore: 'Dismissed',
+      batch: 'Batch',
+      restore: 'Restored',
     };
 
     const showRestore = (entry.actionType === 'auto_remove' || entry.actionType === 'manual_remove');
@@ -791,7 +791,7 @@ function renderAuditLog() {
       <td>u/${escHtml(entry.authorName || '—')}</td>
       <td class="audit-triggered-by">${escHtml(entry.triggeredBy)}</td>
       <td>${entry.aiConfidence}%</td>
-      <td>${showRestore ? `<button class="audit-restore-btn" data-content-id="${entry.contentId}">♻️ Restore</button>` : ''}</td>
+      <td>${showRestore ? `<button class="audit-restore-btn" data-content-id="${entry.contentId}">Restore</button>` : ''}</td>
     `;
 
     // Wire restore button

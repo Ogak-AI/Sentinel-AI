@@ -86,7 +86,7 @@ async function resolveAndUpdate(
         }
         await recordManualApproval(context.redis, subredditId);
 
-        context.ui.showToast({ text: '✅ Post approved. User trust score improved.', appearance: 'success' });
+        context.ui.showToast({ text: 'Post approved. User trust score improved.', appearance: 'success' });
         break;
       }
 
@@ -121,7 +121,7 @@ async function resolveAndUpdate(
         }
 
         await recordManualRemoval(context.redis, subredditId);
-        context.ui.showToast({ text: '🗑️ Post removed. User trust score decreased.', appearance: 'success' });
+        context.ui.showToast({ text: 'Post removed. User trust score decreased.', appearance: 'success' });
         break;
       }
 
@@ -146,12 +146,12 @@ async function resolveAndUpdate(
             await recordViolation(context.redis, subredditId, queuedItem.authorId, queuedItem.authorName);
             await context.reddit.remove(postId, false);
           } catch (e) {
-            context.ui.showToast({ text: `⚠️ Could not ban user: ${e}`, appearance: 'neutral' });
+            context.ui.showToast({ text: `Could not ban user: ${e}`, appearance: 'neutral' });
             return;
           }
         }
         await recordManualRemoval(context.redis, subredditId);
-        context.ui.showToast({ text: '🔨 User banned (30 days) and post removed.', appearance: 'success' });
+        context.ui.showToast({ text: 'User banned (30 days) and post removed.', appearance: 'success' });
         break;
       }
 
@@ -166,13 +166,13 @@ async function resolveAndUpdate(
             'Dismissed by moderator',
           );
         }
-        context.ui.showToast({ text: '👁️ Post dismissed from Sentinel queue.', appearance: 'neutral' });
+        context.ui.showToast({ text: 'Post dismissed from Sentinel queue.', appearance: 'neutral' });
         break;
       }
     }
   } catch (err) {
     console.error(`[Sentinel] Post menu action failed:`, err);
-    context.ui.showToast({ text: '❌ Action failed. Check app logs.', appearance: 'neutral' });
+    context.ui.showToast({ text: 'Action failed. Check app logs.', appearance: 'neutral' });
   }
 }
 
@@ -181,7 +181,7 @@ async function resolveAndUpdate(
 // ──────────────────────────────────────────────
 
 export const sentinelApprovePost: MenuItem = {
-  label: '✅ Sentinel: Approve Post',
+  label: 'Sentinel: Approve Post',
   location: 'post',
   forUserType: 'moderator',
   onPress: async (event, context) => {
@@ -192,7 +192,7 @@ export const sentinelApprovePost: MenuItem = {
 };
 
 export const sentinelRemovePost: MenuItem = {
-  label: '🗑️ Sentinel: Remove Post',
+  label: 'Sentinel: Remove Post',
   location: 'post',
   forUserType: 'moderator',
   onPress: async (event, context) => {
@@ -203,7 +203,7 @@ export const sentinelRemovePost: MenuItem = {
 };
 
 export const sentinelBanUserPost: MenuItem = {
-  label: '🔨 Sentinel: Ban User (30d)',
+  label: 'Sentinel: Ban User (30d)',
   location: 'post',
   forUserType: 'moderator',
   onPress: async (event, context) => {
@@ -214,7 +214,7 @@ export const sentinelBanUserPost: MenuItem = {
 };
 
 export const sentinelIgnorePost: MenuItem = {
-  label: '👁️ Sentinel: Dismiss from Queue',
+  label: 'Sentinel: Dismiss from Queue',
   location: 'post',
   forUserType: 'moderator',
   onPress: async (event, context) => {

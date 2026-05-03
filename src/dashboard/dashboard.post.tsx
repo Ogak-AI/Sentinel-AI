@@ -161,7 +161,7 @@ async function handleAction(
           ));
         }
 
-        return { success: true, message: '✅ Content approved — trust score improved' };
+        return { success: true, message: 'Content approved — trust score improved' };
       }
 
       case 'remove': {
@@ -186,7 +186,7 @@ async function handleAction(
           ));
         }
 
-        return { success: true, message: '🗑️ Content removed — trust score decreased' };
+        return { success: true, message: 'Content removed — trust score decreased' };
       }
 
       case 'ban': {
@@ -214,7 +214,7 @@ async function handleAction(
           ));
         }
 
-        return { success: true, message: '🔨 User banned (30d) & content removed' };
+        return { success: true, message: 'User banned (30d) & content removed' };
       }
 
       case 'ignore': {
@@ -226,13 +226,13 @@ async function handleAction(
             `moderator:${modUsername}`, 'Dismissed from queue',
           ));
         }
-        return { success: true, message: '👁️ Dismissed from queue' };
+        return { success: true, message: 'Dismissed from queue' };
       }
 
       case 'lock': {
         // Fallback: Just ignore/dismiss if locking is unsupported in this API version
         await resolveQueueItem(context.redis, subredditId, itemId, 'ignored', modUsername, 'Locked/Dismissed by moderator');
-        return { success: true, message: '🔒 Content dismissed (lock unsupported)' };
+        return { success: true, message: 'Content dismissed (lock unsupported)' };
       }
     }
 
@@ -345,9 +345,9 @@ async function handleBatchAction(
     }
   }
 
-  const label = payload.action === 'approve' ? '✅ Approved' :
-    payload.action === 'remove' ? '🗑️ Removed' :
-    payload.action === 'ban' ? '🔨 Banned' : '👁️ Dismissed';
+  const label = payload.action === 'approve' ? 'Approved' :
+    payload.action === 'remove' ? 'Removed' :
+    payload.action === 'ban' ? 'Banned' : 'Dismissed';
 
   return {
     success: failCount === 0,
@@ -403,12 +403,12 @@ export const SentinelDashboardPost = Devvit.addCustomPostType({
         try {
           const subreddit = await context.reddit.getCurrentSubreddit();
           await saveCustomRules(context.redis, subreddit.id, payload.rules);
-          await refreshAndSend({ actionResult: { success: true, message: '✅ Rules saved successfully' } });
+          await refreshAndSend({ actionResult: { success: true, message: 'Rules saved successfully' } });
         } catch {
           context.ui.webView.postMessage('sentinel-dashboard',
             JSON.parse(JSON.stringify({
               type: 'INIT_DATA',
-              payload: { actionResult: { success: false, message: '❌ Failed to save rules' } },
+              payload: { actionResult: { success: false, message: 'Failed to save rules' } },
             })),
           );
         }
@@ -428,12 +428,12 @@ export const SentinelDashboardPost = Devvit.addCustomPostType({
             `moderator:${modUsername}`, 'Content restored from audit log',
           ));
 
-          await refreshAndSend({ actionResult: { success: true, message: '✅ Content restored successfully' } });
+          await refreshAndSend({ actionResult: { success: true, message: 'Content restored successfully' } });
         } catch {
           context.ui.webView.postMessage('sentinel-dashboard',
             JSON.parse(JSON.stringify({
               type: 'INIT_DATA',
-              payload: { actionResult: { success: false, message: '❌ Failed to restore content' } },
+              payload: { actionResult: { success: false, message: 'Failed to restore content' } },
             })),
           );
         }
@@ -451,7 +451,7 @@ export const SentinelDashboardPost = Devvit.addCustomPostType({
           padding="large"
         >
           <spacer size="large" />
-          <text size="xxlarge" weight="bold" color="#818cf8">🛡️ Sentinel AI</text>
+          <text size="xxlarge" weight="bold" color="#818cf8">Sentinel AI</text>
           <text size="large" weight="bold" color="#f1f5f9">Adaptive Moderation & Queue Intelligence</text>
           <spacer size="small" />
           <text size="medium" color="#64748b" alignment="center">
@@ -465,7 +465,7 @@ export const SentinelDashboardPost = Devvit.addCustomPostType({
               setLaunched(true);
             }}
           >
-            🚀 Open Dashboard
+            Open Dashboard
           </button>
           <spacer size="small" />
           <hstack gap="small" alignment="center">

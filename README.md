@@ -1,4 +1,4 @@
-# 🛡️ Sentinel AI — Smart Moderation & Queue Prioritization Engine
+# Sentinel AI — Smart Moderation & Queue Prioritization Engine
 
 > **Reddit Mod Tools Hackathon 2025** — Built on Devvit, Reddit's developer platform.
 
@@ -6,50 +6,50 @@ Sentinel AI is a production-ready, AI-powered moderation assistant that runs nat
 
 ---
 
-## 🎥 What It Does
+## What It Does
 
 | Without Sentinel | With Sentinel |
 |---|---|
 | Mods manually read every report | AI pre-screens content instantly |
-| Flat, unsorted mod queue | Priority-ranked queue (🔴🟡🟢) |
+| Flat, unsorted mod queue | Priority-ranked queue (High/Medium/Low) |
 | No context on why something was flagged | Every item has an AI explanation |
 | No user history | Trust scores track repeat offenders |
 | Actions scattered across Reddit UI | One dashboard, one click |
 
 ---
 
-## ⚙️ Features
+## Features
 
-### 1. 🤖 AI Content Moderation Engine
+### 1. AI Content Moderation Engine
 - Analyzes every post & comment at submission time
 - Detects: **Spam · Toxicity · Hate Speech · Scams · Rule Violations · Low Effort**
 - Outputs: category, confidence score (0–100), human-readable explanation
 - Primary: OpenAI GPT-4o-mini (fast, cheap, accurate)
 - Fallback: Rule-based heuristic engine (zero API cost, always works)
 
-### 2. ⚡ Smart Queue Prioritization
+### 2. Smart Queue Prioritization
 - Composite priority score = AI confidence + report count + user risk + recency
-- Items ranked **🔴 High / 🟡 Medium / 🟢 Low**
+- Items ranked **High / Medium / Low**
 - Mods see the worst violations first — always
 
-### 3. 👤 User Reputation System
+### 3. User Reputation System
 - Every user has a **trust score (0–100)** per subreddit
 - Score factors: violations (–15), approvals (+5), karma, account age
 - **Trust score ≥ 80** → auto-approve bypass (no AI call needed)
 - **Trust score < 25** → aggressive flagging
 
-### 4. 🧠 Decision Engine (Explainability Layer)
+### 4. Decision Engine (Explainability Layer)
 - Every moderation decision includes a human-readable **"Why this action was taken"**
 - Layered decision hierarchy: Safety gate → Temporal ban → Trust bypass → Severity gate → Queue routing
 - Example: *"Low-trust user (score: 12/100) posting spam with 85% confidence. Auto-removed due to combined risk."*
 
-### 5. 📋 Custom Rule Engine
+### 5. Custom Rule Engine
 - Moderators define per-subreddit keyword rules directly in the dashboard
 - Rules are evaluated **before** AI analysis (short-circuit for known patterns)
 - Each rule has: keywords, action (remove/review/ban), and custom reason
 - Create, enable/disable, and delete rules from the Rules tab
 
-### 6. 🖥️ One-Click Moderator Dashboard
+### 6. One-Click Moderator Dashboard
 - Beautiful dark-mode webview pinned as a subreddit post
 - 5 tabs: **Queue · Users · Analytics · Rules · Settings**
 - **Batch moderation**: Select multiple items, one-click resolve all
@@ -57,13 +57,13 @@ Sentinel AI is a production-ready, AI-powered moderation assistant that runs nat
 - Click any item to see full AI analysis + decision reasoning + action buttons
 - Impact Summary: Auto-mod rate, time saved, queue reduction, false positive rate
 
-### 7. 🎯 Adaptive Learning System
+### 7. Adaptive Learning System
 - Every moderator override is recorded as a `ModOverride` in Redis
 - Tracks: original AI category, original confidence, mod's corrective action
 - False positive rate tracked in statistics — lets mods tune thresholds
 - System builds subreddit-specific signal over time
 
-### 8. 📊 Metrics & Analytics
+### 8. Metrics & Analytics
 - **Impact Summary**: Auto-mod rate, time saved, queue reduction %, false positive rate
 - Violation breakdown by category with visual bar charts
 - AI performance metrics: precision tracking over time
@@ -71,7 +71,7 @@ Sentinel AI is a production-ready, AI-powered moderation assistant that runs nat
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ```
 New Post/Comment
@@ -110,7 +110,7 @@ New Post/Comment
 
 ---
 
-## 📁 File Structure
+## File Structure
 
 ```
 sentinel-ai/
@@ -149,7 +149,7 @@ sentinel-ai/
 
 ---
 
-## 🚀 Setup & Installation
+## Setup & Installation
 
 ### Prerequisites
 - Node.js 22.2.0+
@@ -183,7 +183,7 @@ After installing on a subreddit, go to **r/yoursubreddit → Mod Tools → Commu
 - `Subreddit Rules` — copy your subreddit's rules here for context
 
 ### Step 5: Open the Dashboard
-As a moderator, go to your subreddit menu (three dots → **🛡️ Open Sentinel Dashboard**). This creates a pinned post with the full interactive dashboard.
+As a moderator, go to your subreddit menu (three dots → **Open Sentinel Dashboard**). This creates a pinned post with the full interactive dashboard.
 
 ### Step 6: Publish
 ```bash
@@ -192,7 +192,7 @@ devvit publish
 
 ---
 
-## ⚙️ Configuration Reference
+## Configuration Reference
 
 | Setting | Default | Description |
 |---|---|---|
@@ -209,7 +209,7 @@ devvit publish
 
 ---
 
-## 🏆 Hackathon Submission Content
+## Hackathon Submission Content
 
 ### Tool Overview
 
@@ -228,7 +228,7 @@ The system gets smarter over time — it tracks which AI decisions moderators ov
 
 ### Project Impact
 
-#### 🎯 Target Communities
+#### Target Communities
 
 **1. r/AmItheAsshole (3.5M+ members)**
 - *Problem*: Toxic comment floods, vote manipulation, name-calling
@@ -262,7 +262,7 @@ The system gets smarter over time — it tracks which AI decisions moderators ov
 
 ---
 
-## 🔒 Privacy & Safety
+## Privacy & Safety
 
 - No user data is sent to OpenAI except post/comment text and author username (for context)
 - No personally identifiable information beyond what's already public on Reddit
@@ -272,7 +272,7 @@ The system gets smarter over time — it tracks which AI decisions moderators ov
 
 ---
 
-## 🧪 Testing
+## Testing
 
 ### Manual Test Cases
 
@@ -294,17 +294,17 @@ Submit a post with that word
 → Expected: Flagged as RULE_VIOLATION, confidence 95%, immediately actionable
 
 **Test dashboard:**
-Open "🛡️ Open Sentinel Dashboard" from subreddit menu
+Open "Open Sentinel Dashboard" from subreddit menu
 → Expected: Creates pinned post, opens webview with queue, stats, and user list
 
 ---
 
-## 📝 License
+## License
 
 MIT License — feel free to fork, adapt, and improve.
 
 ---
 
-## 🙏 Credits
+## Credits
 
 Built for the **Reddit Mod Tools & Migrated Apps Hackathon 2025** on the Devvit platform.

@@ -8,7 +8,7 @@ import type { MenuItem } from '@devvit/public-api';
 import { Keys } from '../constants.js';
 
 export const openSentinelDashboard: MenuItem = {
-  label: '🛡️ Open Sentinel Dashboard',
+  label: 'Open Sentinel Dashboard',
   location: 'subreddit',
   forUserType: 'moderator',
   onPress: async (_event, context) => {
@@ -29,7 +29,7 @@ export const openSentinelDashboard: MenuItem = {
       // Create a new dashboard post
       const post = await context.reddit.submitPost({
         subredditName,
-        title: '🛡️ Sentinel AI — Moderation Dashboard',
+        title: 'Sentinel AI — Moderation Dashboard',
         // Custom post type — renders the Devvit interactive UI
         preview: (
           <vstack alignment="center middle" height="100%">
@@ -51,10 +51,10 @@ export const openSentinelDashboard: MenuItem = {
       }
 
       context.ui.navigateTo(post);
-      context.ui.showToast({ text: '🛡️ Sentinel Dashboard created!', appearance: 'success' });
+      context.ui.showToast({ text: 'Sentinel Dashboard created!', appearance: 'success' });
     } catch (err) {
       console.error('[Sentinel] Failed to create/open dashboard:', err);
-      context.ui.showToast({ text: '❌ Could not open dashboard.', appearance: 'neutral' });
+      context.ui.showToast({ text: 'Could not open dashboard.', appearance: 'neutral' });
     }
   },
 };

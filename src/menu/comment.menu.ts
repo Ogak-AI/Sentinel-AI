@@ -42,7 +42,7 @@ async function resolveComment(
           }
         }
         await recordManualApproval(context.redis, subredditId);
-        context.ui.showToast({ text: '✅ Comment approved.', appearance: 'success' });
+        context.ui.showToast({ text: 'Comment approved.', appearance: 'success' });
         break;
       }
       case 'mod_removed': {
@@ -54,25 +54,25 @@ async function resolveComment(
           }
         }
         await recordManualRemoval(context.redis, subredditId);
-        context.ui.showToast({ text: '🗑️ Comment removed.', appearance: 'success' });
+        context.ui.showToast({ text: 'Comment removed.', appearance: 'success' });
         break;
       }
       case 'ignored': {
         if (queuedItem) {
           await resolveQueueItem(context.redis, subredditId, commentId, 'ignored', modUsername);
         }
-        context.ui.showToast({ text: '👁️ Dismissed from queue.', appearance: 'neutral' });
+        context.ui.showToast({ text: 'Dismissed from queue.', appearance: 'neutral' });
         break;
       }
     }
   } catch (err) {
     console.error('[Sentinel] Comment action failed:', err);
-    context.ui.showToast({ text: '❌ Action failed.', appearance: 'neutral' });
+    context.ui.showToast({ text: 'Action failed.', appearance: 'neutral' });
   }
 }
 
 export const sentinelApproveComment: MenuItem = {
-  label: '✅ Sentinel: Approve Comment',
+  label: 'Sentinel: Approve Comment',
   location: 'comment',
   forUserType: 'moderator',
   onPress: async (event, context) => {
@@ -82,7 +82,7 @@ export const sentinelApproveComment: MenuItem = {
 };
 
 export const sentinelRemoveComment: MenuItem = {
-  label: '🗑️ Sentinel: Remove Comment',
+  label: 'Sentinel: Remove Comment',
   location: 'comment',
   forUserType: 'moderator',
   onPress: async (event, context) => {
@@ -92,7 +92,7 @@ export const sentinelRemoveComment: MenuItem = {
 };
 
 export const sentinelIgnoreComment: MenuItem = {
-  label: '👁️ Sentinel: Dismiss Comment',
+  label: 'Sentinel: Dismiss Comment',
   location: 'comment',
   forUserType: 'moderator',
   onPress: async (event, context) => {
