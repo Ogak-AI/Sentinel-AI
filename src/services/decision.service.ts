@@ -112,6 +112,8 @@ export interface DecisionContext {
   settings: SentinelSettings;
   recentViolations24h: number;
   reportCount?: number;
+  /** Optional adaptive threshold override (from adaptive learning) */
+  adaptiveThreshold?: number;
 }
 
 /**
@@ -124,6 +126,7 @@ export function decide(ctx: DecisionContext): DecisionResult {
   const { analysis, user, settings, recentViolations24h } = ctx;
   const { category, confidence } = analysis;
   const severity = classifySeverity(category, confidence);
+  const effectiveThreshold = ctx.adaptiveThreshold ?? settings.autoRemoveThreshold;
 
   // ── LAYER 0: Content is clean → skip ──────────────────────
   if (category === 'clean') {
@@ -184,10 +187,10 @@ export function decide(ctx: DecisionContext): DecisionResult {
   }
 
   // ── LAYER 4: High severity, high confidence → auto-remove ─
-  if (severity === 'high' && confidence >= settings.autoRemoveThreshold) {
+  if (severity === 'high' && confidence >= effectiveThreshold) {
     return {
       action: 'auto_remove',
-      reason: `High severity ${category} detected with ${confidence}% confidence (threshold: ${settings.autoRemoveThreshold}%). Auto-removed.`,
+      reason: `High severity ${category} detected with ${confidence}% confidence (threshold: ${effectiveThreshold}%${ctx.adaptiveThreshold ? ' [adaptive]' : ''}). Auto-removed.`,
       requiresModReview: false,
       severity: 'high',
     };
@@ -208,10 +211,10 @@ export function decide(ctx: DecisionContext): DecisionResult {
   }
 
   // ── LAYER 6: Medium severity, high confidence ──────────────
-  if (severity === 'medium' && confidence >= settings.autoRemoveThreshold) {
+  if (severity === 'medium' && confidence >= effectiveThreshold) {
     return {
       action: 'auto_remove',
-      reason: `${category} detected with ${confidence}% confidence (threshold met). Auto-removed.`,
+      reason: `${category} detected with ${confidence}% confidence (threshold: ${effectiveThreshold}%${ctx.adaptiveThreshold ? ' [adaptive]' : ''}). Auto-removed.`,
       requiresModReview: false,
       severity: 'medium',
     };

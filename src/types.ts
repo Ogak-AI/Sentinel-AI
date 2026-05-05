@@ -162,7 +162,7 @@ export interface UserReputation {
 }
 
 // ──────────────────────────────────────────────
-// Moderator Override (for adaptive learning)
+// Moderator Override (for threshold tuning)
 // ──────────────────────────────────────────────
 
 export interface ModOverride {
@@ -222,6 +222,7 @@ export interface SentinelSettings {
   openaiApiKey: string;
   aiModel: string;
   autoRemoveThreshold: number;
+  dailyApiLimit: number;
   autoApproveTrustedUsers: boolean;
   trustedUserThreshold: number;
   lowTrustThreshold: number;
@@ -235,7 +236,7 @@ export interface SentinelSettings {
 // Dashboard Message Types (Blocks ↔ Webview)
 // ──────────────────────────────────────────────
 
-export type DashboardTab = 'queue' | 'users' | 'stats' | 'settings';
+export type DashboardTab = 'queue' | 'users' | 'stats' | 'settings' | 'audit' | 'rules';
 
 export interface WebviewMessage {
   type:
@@ -250,6 +251,34 @@ export interface WebviewMessage {
   payload?: unknown;
 }
 
+/** Rate limit / API usage status sent to the dashboard */
+export interface RateLimitInfo {
+  todayCalls: number;
+  dailyLimit: number;
+  isRateLimited: boolean;
+  estimatedCostToday: string;
+  totalCost: string;
+}
+
+/** Per-category threshold tuning data for the Analytics tab */
+export interface ThresholdTuningCategory {
+  category: string;
+  currentThreshold: number;
+  defaultThreshold: number;
+  falsePositiveRate: number;
+  falseNegativeRate: number;
+  adjustmentDelta: number;
+  autoAdjusted: boolean;
+}
+
+export interface ThresholdTuningData {
+  categories: ThresholdTuningCategory[];
+  lastRecalculated: number;
+}
+
+/** Mode indicator for dashboard header */
+export type AiModeStatus = 'ai_active' | 'heuristic_only' | 'rate_limited';
+
 export interface InitDataPayload {
   queueItems: FlaggedItem[];
   metrics: SentinelMetrics;
@@ -258,6 +287,11 @@ export interface InitDataPayload {
   customRules?: SubredditRule[];
   isModerator: boolean;
   currentUsername: string;
+  auditLog?: AuditEntry[];
+  rateLimitInfo?: RateLimitInfo;
+  aiModeStatus?: AiModeStatus;
+  thresholdTuning?: ThresholdTuningData;
+  avgDailyVolume?: number;
 }
 
 

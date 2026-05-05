@@ -32,6 +32,7 @@ import {
   evaluateRules,
 } from '../services/rules.service.js';
 import { recordAuditEntry, buildAuditEntry } from '../services/audit.service.js';
+import { getAdaptiveThreshold } from '../services/adaptive.service.js';
 import { AUTO_BAN_DURATION_DAYS } from '../constants.js';
 
 export async function handleCommentSubmit(
@@ -86,18 +87,23 @@ export async function handleCommentSubmit(
   let analysis = ruleResult.matched ? ruleResult.analysis : null;
   const triggeredRuleName = ruleResult.matched ? ruleResult.rule.name : undefined;
 
-  // ── AI Analysis ───────────────────────────────────────────
+  // ── AI Analysis ─────────────────────────────────────────
   if (!analysis) {
-    analysis = await analyzeContent('comment', undefined, body, authorName, settings, context.reddit);
+    analysis = await analyzeContent('comment', undefined, body, authorName, settings, context.reddit, context.redis, subredditId);
   }
 
-  // ── Decision Engine ───────────────────────────────────────
+  // ── Decision Engine ───────────────────────────────────
+  const adaptiveThreshold = await getAdaptiveThreshold(
+    context.redis, subredditId, analysis.category, settings.autoRemoveThreshold,
+  );
+
   const decision = decide({
     analysis,
     user: rep,
     settings,
     recentViolations24h,
     reportCount: 0,
+    adaptiveThreshold,
   });
 
   await recordScan(context.redis, subredditId, analysis.category);

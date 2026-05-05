@@ -41,6 +41,7 @@ import {
   evaluateRules,
 } from '../services/rules.service.js';
 import { recordAuditEntry, buildAuditEntry } from '../services/audit.service.js';
+import { getAdaptiveThreshold } from '../services/adaptive.service.js';
 import { AUTO_BAN_DURATION_DAYS } from '../constants.js';
 
 export async function handlePostSubmit(
@@ -98,7 +99,7 @@ export async function handlePostSubmit(
 
   // ── 5. AI Analysis (if no rule matched) ───────────────────
   if (!analysis) {
-    analysis = await analyzeContent('post', title, body, authorName, settings, context.reddit);
+    analysis = await analyzeContent('post', title, body, authorName, settings, context.reddit, context.redis, subredditId);
   }
 
   console.log(
@@ -106,12 +107,27 @@ export async function handlePostSubmit(
   );
 
   // ── 6. Decision Engine ────────────────────────────────────
+  // Fetch adaptive threshold for this category (from learning system)
+  const adaptiveThreshold = await getAdaptiveThreshold(
+    context.redis, subredditId, analysis.category, settings.autoRemoveThreshold,
+  );
+
+  // Attempt to get report count (may not be available for new posts)
+  let reportCount = 0;
+  try {
+    const postObj = await context.reddit.getPostById(itemId);
+    reportCount = postObj?.numberOfReports ?? 0;
+  } catch {
+    // Report count unavailable, use 0
+  }
+
   const decision = decide({
     analysis,
     user: rep,
     settings,
     recentViolations24h,
-    reportCount: 0,
+    reportCount,
+    adaptiveThreshold,
   });
 
   console.log(`[Sentinel/post] ${itemId} → decision: ${decision.action} — ${decision.reason}`);

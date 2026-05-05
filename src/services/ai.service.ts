@@ -3,8 +3,9 @@
 // Tries OpenAI first; falls back to rule-based heuristics.
 // ============================================================
 
-import type { RedditAPIClient } from '@devvit/public-api';
+import type { RedditAPIClient, RedisClient } from '@devvit/public-api';
 import type { AIAnalysisResult, SentinelSettings, Severity, ViolationCategory } from '../types.js';
+import { canMakeApiCall, recordApiCall } from './ratelimit.service.js';
 
 import {
   AI_MAX_TOKENS,
@@ -286,16 +287,34 @@ export async function analyzeContent(
   body: string,
   authorName: string,
   settings: SentinelSettings,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _reddit?: RedditAPIClient,
+  redis?: RedisClient,
+  subredditId?: string,
 ): Promise<AIAnalysisResult> {
   const systemPrompt = buildSystemPrompt(settings);
   const userPrompt = buildUserPrompt(contentType, title, body, authorName);
 
-  // Try OpenAI
+  // Try OpenAI (with rate limiting)
   if (settings.openaiApiKey) {
-    const aiResult = await callOpenAI(settings, systemPrompt, userPrompt);
-    if (aiResult) return aiResult;
+    // Check rate limit if Redis is available
+    let rateLimited = false;
+    if (redis && subredditId) {
+      rateLimited = !(await canMakeApiCall(redis, subredditId));
+      if (rateLimited) {
+        console.warn('[Sentinel] Rate limited — falling back to heuristics');
+      }
+    }
+
+    if (!rateLimited) {
+      const aiResult = await callOpenAI(settings, systemPrompt, userPrompt);
+      if (aiResult) {
+        // Record the API call for cost tracking
+        if (redis && subredditId) {
+          await recordApiCall(redis, subredditId).catch(() => {});
+        }
+        return aiResult;
+      }
+    }
   }
 
   // Fallback: heuristics

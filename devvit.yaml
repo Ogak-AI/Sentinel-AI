@@ -38,9 +38,16 @@ settings:
 
   - name: autoRemoveThreshold
     label: "Auto-Remove Confidence Threshold (%)"
-    description: "Posts/comments with AI confidence above this threshold are automatically removed. Set to 100 to disable auto-removal."
+    description: "Posts/comments with AI confidence above this threshold are automatically removed. Set to 100 to disable auto-removal. Min: 75, Max: 99."
     type: number
     defaultValue: 92
+    required: false
+
+  - name: dailyApiLimit
+    label: "Daily OpenAI Call Limit"
+    description: "Maximum OpenAI API calls per day. Falls back to heuristic mode when exceeded. Default: 500."
+    type: number
+    defaultValue: 500
     required: false
 
   - name: autoApproveTrustedUsers
