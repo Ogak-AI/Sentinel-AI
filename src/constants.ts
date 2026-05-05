@@ -51,6 +51,15 @@ export const Keys = {
 
   /** Sorted set: member=JSON audit entry, score=timestamp. Rolling action audit log. */
   audit: (subredditId: string) => `sentinel:audit:${subredditId}`,
+
+  /** Hash: per-category adaptive thresholds */
+  thresholds: (subredditId: string) => `sentinel:thresholds:${subredditId}`,
+
+  /** String: daily content volume counter for cost estimation */
+  dailyVolume: (subredditId: string, date: string) => `sentinel:volume:${subredditId}:${date}`,
+
+  /** String: OpenAI daily call counter (rate limiter) */
+  openaiCalls: (subredditId: string, date: string) => `sentinel:openai_calls:${subredditId}:${date}`,
 };
 
 
@@ -187,7 +196,11 @@ export const JOBS = {
   CLEANUP_QUEUE: 'sentinel_cleanup_queue',
   METRICS_ROLLUP: 'sentinel_metrics_rollup',
   DASHBOARD_UPDATE: 'sentinel_dashboard_update',
+  THRESHOLD_RECALC: 'sentinel_threshold_recalc',
 } as const;
+
+/** Default daily API call limit */
+export const DEFAULT_DAILY_API_LIMIT = 500;
 
 // ──────────────────────────────────────────────
 // Default Settings
@@ -197,6 +210,7 @@ export const DEFAULT_SETTINGS = {
   openaiApiKey: '',
   aiModel: DEFAULT_AI_MODEL,
   autoRemoveThreshold: 92,
+  dailyApiLimit: 500,
   autoApproveTrustedUsers: true,
   trustedUserThreshold: 80,
   lowTrustThreshold: 25,
@@ -206,3 +220,12 @@ export const DEFAULT_SETTINGS = {
     'Your post/comment was automatically removed by Sentinel AI for the following reason: {reason}. If you believe this was a mistake, please message the moderators.',
   enableRemovalComments: true,
 } as const;
+
+/** Default per-category thresholds */
+export const DEFAULT_CATEGORY_THRESHOLDS: Record<string, number> = {
+  spam: 92,
+  toxicity: 92,
+  hate_speech: 92,
+  scam: 92,
+  rule_violation: 92,
+};
